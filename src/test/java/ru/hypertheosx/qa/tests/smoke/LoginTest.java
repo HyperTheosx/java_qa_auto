@@ -5,8 +5,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import ru.hypertheosx.qa.base.BaseTest;
+import ru.hypertheosx.qa.models.ActiveUsersProvider;
+import ru.hypertheosx.qa.models.LockedUsersProvider;
 import ru.hypertheosx.qa.models.User;
 
 @Tags({
@@ -22,7 +24,7 @@ import ru.hypertheosx.qa.models.User;
 public class LoginTest extends BaseTest {
 
     @ParameterizedTest(name = "Вход под пользователем: {0}")
-    @MethodSource("ru.hypertheosx.qa.models.UserProvider#activeUsers")
+    @ArgumentsSource(ActiveUsersProvider.class)
     @Severity(SeverityLevel.BLOCKER)
     @Issue("TEST-001")
     @Description("Проверяем, что корректный пользователь имеет возможность авторизоваться в системе")
@@ -35,7 +37,7 @@ public class LoginTest extends BaseTest {
     }
 
     @ParameterizedTest(name = "Вход под пользователем: {0}")
-    @MethodSource("ru.hypertheosx.qa.models.UserProvider#lockedUsers")
+    @ArgumentsSource(LockedUsersProvider.class)
     @Severity(SeverityLevel.BLOCKER)
     @Issue("TEST-002")
     @Description("Проверяем, что некорректный пользователь не имеет возможность авторизоваться в системе")
