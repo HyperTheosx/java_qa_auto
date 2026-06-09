@@ -3,12 +3,11 @@ package ru.hypertheosx.qa.data;
 
 import ru.hypertheosx.qa.config.AppConfig;
 import ru.hypertheosx.qa.models.User;
-import ru.hypertheosx.qa.models.UserState;
 
 import static ru.hypertheosx.qa.models.UserState.ACTIVE;
 import static ru.hypertheosx.qa.models.UserState.LOCKED;
 
-public final class UserFactory {
+public final class TestUsers {
 
     public static User standardUser() {
         return new User(
