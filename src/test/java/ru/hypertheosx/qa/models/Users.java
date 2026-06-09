@@ -5,31 +5,27 @@ import ru.hypertheosx.qa.data.UserFactory;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static ru.hypertheosx.qa.models.UserState.ACTIVE;
-
-public class UserProvider {
+public class Users {
 
     public static Stream<User> activeUsers() {
-        return ALL_USERS.stream().filter(user -> user.userState() == ACTIVE);
-    }
+        return ALL_USERS.stream().filter(User::isActive);
+    };
 
     public static Stream<User> lockedUsers() {
-        return ALL_USERS.stream().filter(user -> user.userState() != ACTIVE);
-    }
+        return ALL_USERS.stream().filter(User::isLocked);
+    };
+
+    public static List<User> allUsers() {
+        return ALL_USERS;
+    };
 
     private static final List<User> ALL_USERS = List.of(
             UserFactory.standardUser(),
-            UserFactory.standardUser1(),
-            UserFactory.standardUser2(),
-            UserFactory.standardUser3(),
-            UserFactory.standardUser4(),
             UserFactory.lockedOutUser(),
             UserFactory.problemUser(),
             UserFactory.performanceGlitchUser(),
             UserFactory.errorUser(),
             UserFactory.visualUser()
     );
-
-
 
 }

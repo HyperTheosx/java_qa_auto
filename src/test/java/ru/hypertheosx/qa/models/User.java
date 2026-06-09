@@ -5,4 +5,11 @@ public record User(
         String password,
         UserState userState
 ) {
+    public boolean isActive() {
+        return userState == UserState.ACTIVE;
+    }
+
+    public boolean isLocked() {
+        return userState == UserState.LOCKED;
+    }
 }
