@@ -5,11 +5,16 @@ import com.codeborne.selenide.logevents.SelenideLogger;
 import io.qameta.allure.selenide.AllureSelenide;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ru.hypertheosx.qa.config.AppConfig;
+import ru.hypertheosx.qa.extensions.ExecutionLoggerExtension;
+import ru.hypertheosx.qa.extensions.ScreenshotOnFailureExtension;
 import ru.hypertheosx.qa.services.AuthService;
 
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 
+@ExtendWith(ScreenshotOnFailureExtension.class)
+@ExtendWith(ExecutionLoggerExtension.class)
 public class BaseTest {
 
     protected final AuthService authService = new AuthService();
