@@ -3,10 +3,10 @@ package ru.hypertheosx.qa.pages;
 import com.codeborne.selenide.SelenideElement;
 
 import static com.codeborne.selenide.Selenide.$;
-import static ru.hypertheosx.qa.components.ButtonLabels.LOGIN_BUTTON;
-import static ru.hypertheosx.qa.components.ElementFactory.inputField;
-import static ru.hypertheosx.qa.components.InputLabels.PASSWORD;
-import static ru.hypertheosx.qa.components.InputLabels.USERNAME;
+import static ru.hypertheosx.qa.components.elements.ButtonLabels.LOGIN_BUTTON;
+import static ru.hypertheosx.qa.components.elements.ElementFactory.inputField;
+import static ru.hypertheosx.qa.components.elements.InputLabels.PASSWORD;
+import static ru.hypertheosx.qa.components.elements.InputLabels.USERNAME;
 
 public class LoginPage {
 
