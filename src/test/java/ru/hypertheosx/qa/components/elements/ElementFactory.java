@@ -1,4 +1,4 @@
-package ru.hypertheosx.qa.components;
+package ru.hypertheosx.qa.components.elements;
 
 import com.codeborne.selenide.SelenideElement;
 

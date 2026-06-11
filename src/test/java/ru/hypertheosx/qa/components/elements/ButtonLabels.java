@@ -1,4 +1,4 @@
-package ru.hypertheosx.qa.components;
+package ru.hypertheosx.qa.components.elements;
 
 public class ButtonLabels {
     private ButtonLabels() {}
