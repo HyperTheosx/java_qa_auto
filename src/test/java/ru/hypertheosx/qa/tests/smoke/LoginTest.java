@@ -26,21 +26,21 @@ public class LoginTest extends BaseTest {
     @ParameterizedTest(name = "Вход под пользователем: {0}")
     @ArgumentsSource(ActiveUsersProvider.class)
     @Severity(SeverityLevel.BLOCKER)
-    @Issue("TEST-001")
-    @Description("Проверяем, что корректный пользователь имеет возможность авторизоваться в системе")
+    @Issue("JIRA-001")
+    @Description("Проверяем, что активный пользователь может авторизоваться в системе")
     @DisplayName("Успешная авторизация")
     public void successfulLoginTest(User user) {
 
         authService
                 .loginAs(user)
-                .shouldBeLoggedIn();
+                .shouldBeOpenProductsPage();
     }
 
     @ParameterizedTest(name = "Вход под пользователем: {0}")
     @ArgumentsSource(LockedUsersProvider.class)
     @Severity(SeverityLevel.BLOCKER)
-    @Issue("TEST-002")
-    @Description("Проверяем, что некорректный пользователь не имеет возможность авторизоваться в системе")
+    @Issue("JIRA-002")
+    @Description("Проверяем, что заблокированный пользователь не может авторизоваться в системе")
     @DisplayName("Ошибка авторизации заблокированного пользователя")
     public void failureLoginTest(User user) {
 
@@ -48,4 +48,5 @@ public class LoginTest extends BaseTest {
                 .loginAs(user)
                 .shouldHaveErrorMessage();
     }
+
 }

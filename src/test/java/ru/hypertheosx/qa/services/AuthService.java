@@ -32,18 +32,16 @@ public class AuthService {
 
     }
 
-    @Step("Проверить, что корректный пользователь авторизуется без ошибки")
-    public AuthService shouldBeLoggedIn() {
+    @Step("Проверить, что корректный пользователь авторизуется без ошибки и попадает на страницу Products")
+    public void shouldBeOpenProductsPage() {
         productsPage.productPageTitle
                 .shouldBe(Condition.visible)
                 .shouldHave(Condition.text("Products"));
-        return this;
     }
 
     @Step("Проверить, что отображается сообщение об ошибке при попытке авторизоваться некоррректным пользователем")
-    public AuthService shouldHaveErrorMessage() {
+    public void shouldHaveErrorMessage() {
         String expectedMessage = "Epic sadface: Sorry, this user has been locked out.";
         assertThat(loginPage.getErrorMessage()).isEqualTo(expectedMessage);
-        return this;
     }
 }
