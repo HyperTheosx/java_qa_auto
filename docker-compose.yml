@@ -1,0 +1,30 @@
+services:
+  selenoid:
+    image: aerokube/selenoid:latest-release
+    ports:
+      - "4444:4444"
+    volumes:
+      - ./selenoid:/etc/selenoid
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./selenoid/video:/opt/selenoid/video
+    environment:
+      - OVERRIDE_VIDEO_OUTPUT_DIR=./selenoid/video
+    command:
+      - -conf
+      - /etc/selenoid/browsers.json
+      - -video-output-dir
+      - /opt/selenoid/video
+      - -timeout
+      - "5m"
+      - -service-startup-timeout
+      - "2m"
+
+  selenoid-ui:
+    image: aerokube/selenoid-ui:latest-release
+    ports:
+      - "8080:8080"
+    depends_on:
+      - selenoid
+    environment:
+      - SELENOID_HOST=selenoid
+      - SELENOID_PORT=4444

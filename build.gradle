@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id 'io.qameta.allure' version '2.12.0'
+    id 'jacoco'
+    id 'com.diffplug.spotless' version '6.25.0'
 }
 
 group 'ru.hypertheosx'
@@ -13,6 +15,9 @@ repositories {
 ext {
     allureVersion = '2.29.0'
     junitVersion = '5.11.3'
+    springVersion = '6.1.14'
+    testcontainersVersion = '1.20.4'
+    wiremockVersion = '3.10.0'
 }
 
 sourceCompatibility = '21'
@@ -24,44 +29,97 @@ tasks.withType(JavaCompile) {
 
 dependencies {
 
+    // UI Tests
     testImplementation 'com.codeborne:selenide:7.6.0'
 
+    // Allure
     testImplementation "io.qameta.allure:allure-selenide:${allureVersion}"
     testImplementation "io.qameta.allure:allure-rest-assured:${allureVersion}"
 
+    // Assertions
     testImplementation 'org.assertj:assertj-core:3.26.3'
 
+    // API Testing
     testImplementation 'io.rest-assured:rest-assured:5.5.1'
-
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
 
+    // Test Data
     testImplementation 'net.datafaker:datafaker:2.4.2'
 
+    // Configuration
     testImplementation 'org.aeonbits.owner:owner:1.0.12'
 
+    // Async
     testImplementation 'org.awaitility:awaitility:4.2.2'
 
+    // JUnit 5
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
 
+    // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
-
     testCompileOnly 'org.projectlombok:lombok:1.18.38'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
 
-    testImplementation 'org.slf4j:slf4j-simple:2.0.16'
+    // Logging
+    testImplementation 'ch.qos.logback:logback-classic:1.5.12'
+
+    // Spring DI
+    testImplementation "org.springframework:spring-context:${springVersion}"
+    testImplementation "org.springframework:spring-test:${springVersion}"
+
+    // Testcontainers
+    testImplementation platform("org.testcontainers:testcontainers-bom:${testcontainersVersion}")
+    testImplementation 'org.testcontainers:testcontainers'
+    testImplementation 'org.testcontainers:selenium'
+
+    // WireMock
+    testImplementation "org.wiremock:wiremock:${wiremockVersion}"
 }
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+
+    systemProperty "env", System.getProperty("env", "dev")
+
+    def forwardIfSet = { key ->
+        def val = System.getProperty(key)
+        if (val != null) { systemProperty key, val }
+    }
+    forwardIfSet("useContainer")
+    forwardIfSet("useWireMock")
+    forwardIfSet("browser")
+    forwardIfSet("headless")
+    forwardIfSet("remote.url")
+    forwardIfSet("remote.video.enabled")
 }
+
 allure {
     autoconfigure = true
     version = "${allureVersion}"
 
     useJUnit5 {
         version = "${allureVersion}"
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+spotless {
+    java {
+        target 'src/test/java/**/*.java'
+        importOrder('java', 'javax', 'org', 'com', '')
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }

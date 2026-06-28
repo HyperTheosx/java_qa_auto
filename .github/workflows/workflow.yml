@@ -1,22 +1,46 @@
-name: Saucedemo UI Tests
+name: QA Automation CI
 
 on:
   push:
+    branches: [ main, master, develop ]
+  pull_request:
     branches: [ main, master ]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Test environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - qa
+          - staging
+      browser:
+        description: 'Browser'
+        required: true
+        default: 'chrome'
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - edge
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
-jobs:
-  run_tests:
-    runs-on: ubuntu-latest
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -25,14 +49,125 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Spotless check
+        run: ./gradlew spotlessCheck --no-daemon
+
+  test:
+    name: Tests (${{ matrix.browser }} / ${{ matrix.env }})
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [ chrome, firefox ]
+        env: [ dev ]
+        include:
+          - browser: chrome
+            env: qa
+          - browser: chrome
+            env: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Setup Browser
+        uses: browser-actions/setup-${{ matrix.browser }}@v1
         with:
           chrome-version: stable
+          firefox-version: latest
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Run UI Tests
-        run: ./gradlew test -Dselenide.headless=true
+        run: |
+          ./gradlew clean test \
+            -Dbrowser=${{ matrix.browser }} \
+            -Denv=${{ matrix.env }} \
+            -Dheadless=true \
+            --no-daemon
         continue-on-error: true
+
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        id: allure-report
+        with:
+          allure_results: build/allure-results
+          allure_report: allure-report
+          allure_history: allure-history
+
+      - name: Upload Allure Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report-${{ matrix.browser }}-${{ matrix.env }}
+          path: allure-report
+
+  report:
+    name: Coverage & Allure Report
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Generate combined Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: build/allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
+      - name: JaCoCo Coverage Report
+        if: always()
+        run: |
+          ./gradlew jacocoTestReport --no-daemon || true
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: build/reports/jacoco/
+
+  notify:
+    name: Send Notification
+    needs: [ test, report ]
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify on failure
+        if: ${{ needs.test.result == 'failure' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ **Tests failed!** Check the [Allure Report](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/) for details.'
+            })
